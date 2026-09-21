@@ -10,7 +10,7 @@ import (
 )
 
 func TestParseFileJSON(t *testing.T) {
-	got, err := ParseFile(filepath.Join("..", "..", "testdata", "file1.json"))
+	got, err := ParseFile(filepath.Join("..", "..", "testdata", "fixture", "file1.json"))
 	require.NoError(t, err)
 
 	expected := map[string]any{
@@ -23,7 +23,7 @@ func TestParseFileJSON(t *testing.T) {
 }
 
 func TestParseFileAbsolutePath(t *testing.T) {
-	absPath, err := filepath.Abs(filepath.Join("..", "..", "testdata", "file2.json"))
+	absPath, err := filepath.Abs(filepath.Join("..", "..", "testdata", "fixture", "file2.json"))
 	require.NoError(t, err)
 
 	got, err := ParseFile(absPath)
@@ -38,7 +38,7 @@ func TestParseFileAbsolutePath(t *testing.T) {
 }
 
 func TestParseFileErrors(t *testing.T) {
-	_, err := ParseFile(filepath.Join("..", "..", "testdata", "missing.json"))
+	_, err := ParseFile(filepath.Join("..", "..", "testdata", "fixture", "missing.json"))
 	require.Error(t, err)
 
 	unsupported := filepath.Join(t.TempDir(), "config.txt")

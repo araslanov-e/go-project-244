@@ -15,8 +15,8 @@ func TestRun(t *testing.T) {
 
 	err := Run(context.Background(), []string{
 		"gendiff",
-		filepath.Join("..", "..", "testdata", "file1.json"),
-		filepath.Join("..", "..", "testdata", "file2.json"),
+		filepath.Join("..", "..", "testdata", "fixture", "file1.json"),
+		filepath.Join("..", "..", "testdata", "fixture", "file2.json"),
 	}, &out)
 	require.NoError(t, err)
 	assert.Contains(t, out.String(), "  + verbose: true\n}\n")

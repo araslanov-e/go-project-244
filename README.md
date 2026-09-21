@@ -10,7 +10,7 @@
 
 ```bash
 make build
-./bin/gendiff testdata/file1.json testdata/file2.json
+./bin/gendiff testdata/fixture/file1.json testdata/fixture/file2.json
 ```
 
 ```
