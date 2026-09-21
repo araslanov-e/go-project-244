@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"go.yaml.in/yaml/v3"
 )
 
 // ParseFile читает файл по пути (относительному или абсолютному) и
@@ -26,7 +28,7 @@ func ParseFile(path string) (map[string]any, error) {
 	return Parse(data, format)
 }
 
-// Parse разбирает данные в указанном формате (например, "json").
+// Parse разбирает данные в указанном формате: "json", "yml" или "yaml".
 func Parse(data []byte, format string) (map[string]any, error) {
 	result := map[string]any{}
 
@@ -34,6 +36,10 @@ func Parse(data []byte, format string) (map[string]any, error) {
 	case "json":
 		if err := json.Unmarshal(data, &result); err != nil {
 			return nil, fmt.Errorf("parse json: %w", err)
+		}
+	case "yml", "yaml":
+		if err := yaml.Unmarshal(data, &result); err != nil {
+			return nil, fmt.Errorf("parse yaml: %w", err)
 		}
 	default:
 		return nil, fmt.Errorf("unsupported file format: %q", format)

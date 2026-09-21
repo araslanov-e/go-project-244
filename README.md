@@ -8,9 +8,12 @@
 
 ## Использование
 
+Поддерживаются форматы JSON (`.json`) и YAML (`.yml`, `.yaml`); формат определяется по расширению файла.
+
 ```bash
 make build
 ./bin/gendiff testdata/fixture/file1.json testdata/fixture/file2.json
+./bin/gendiff testdata/fixture/file1.yml testdata/fixture/file2.yaml
 ```
 
 ```
@@ -23,7 +26,3 @@ make build
   + verbose: true
 }
 ```
-
-### Сравнение плоских JSON-файлов
-
-[![asciicast](https://asciinema.org/a/ASCIINEMA_ID.svg)](https://asciinema.org/a/ASCIINEMA_ID)
