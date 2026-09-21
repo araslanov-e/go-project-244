@@ -9,20 +9,15 @@
 ## Использование
 
 Поддерживаются форматы JSON (`.json`) и YAML (`.yml`, `.yaml`); формат определяется по расширению файла.
+Файлы могут содержать вложенные структуры — они сравниваются рекурсивно.
 
 ```bash
 make build
-./bin/gendiff testdata/fixture/file1.json testdata/fixture/file2.json
-./bin/gendiff testdata/fixture/file1.yml testdata/fixture/file2.yaml
+./bin/gendiff testdata/fixture/nested1.json testdata/fixture/nested2.json
+./bin/gendiff --format stylish testdata/fixture/nested1.yml testdata/fixture/nested2.yaml
 ```
 
-```
-{
-  - follow: false
-    host: hexlet.io
-  - proxy: 123.234.53.22
-  - timeout: 50
-  + timeout: 20
-  + verbose: true
-}
-```
+Формат вывода задаётся флагом `--format` (`-f`). По умолчанию используется `stylish`:
+`+` — добавленное значение, `-` — удалённое, без знака — значение не изменилось.
+
+![gendiff demo](docs/gendiff.gif)

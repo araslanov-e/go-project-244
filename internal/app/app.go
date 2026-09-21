@@ -6,6 +6,7 @@ import (
 	"io"
 
 	"code"
+	"code/internal/formatters"
 
 	"github.com/urfave/cli/v3"
 )
@@ -26,7 +27,7 @@ func newCommand(output io.Writer) *cli.Command {
 				Name:    "format",
 				Aliases: []string{"f"},
 				Usage:   "output format",
-				Value:   "stylish",
+				Value:   formatters.Stylish,
 			},
 		},
 		Action: func(_ context.Context, cmd *cli.Command) error {

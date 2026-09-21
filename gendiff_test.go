@@ -22,82 +22,39 @@ func readFixture(t *testing.T, name string) string {
 	return string(data)
 }
 
-func TestGenDiffFlatJSON(t *testing.T) {
+func TestGenDiffNested(t *testing.T) {
 	tests := []struct {
-		name     string
-		file1    string
-		file2    string
-		expected string
+		name   string
+		file1  string
+		file2  string
+		format string
 	}{
-		{
-			name:     "changed, added and removed keys",
-			file1:    "file1.json",
-			file2:    "file2.json",
-			expected: "flat_result.txt",
-		},
-		{
-			name:     "identical files",
-			file1:    "file1.json",
-			file2:    "file1.json",
-			expected: "flat_same_result.txt",
-		},
-		{
-			name:     "all keys added",
-			file1:    "empty.json",
-			file2:    "file2.json",
-			expected: "flat_added_result.txt",
-		},
+		{name: "json", file1: "nested1.json", file2: "nested2.json", format: "stylish"},
+		{name: "yaml", file1: "nested1.yml", file2: "nested2.yaml", format: "stylish"},
+		{name: "json and yaml", file1: "nested1.json", file2: "nested2.yaml", format: "stylish"},
+		{name: "default format", file1: "nested1.json", file2: "nested2.json", format: ""},
 	}
+
+	expected := readFixture(t, "nested_result.txt")
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := GenDiff(fixturePath(tt.file1), fixturePath(tt.file2), "stylish")
+			got, err := GenDiff(fixturePath(tt.file1), fixturePath(tt.file2), tt.format)
 			require.NoError(t, err)
-			assert.Equal(t, readFixture(t, tt.expected), got)
+			assert.Equal(t, expected, got)
 		})
 	}
 }
 
-func TestGenDiffFlatYAML(t *testing.T) {
-	tests := []struct {
-		name     string
-		file1    string
-		file2    string
-		expected string
-	}{
-		{
-			name:     "changed, added and removed keys",
-			file1:    "file1.yml",
-			file2:    "file2.yaml",
-			expected: "flat_result.txt",
-		},
-		{
-			name:     "identical files",
-			file1:    "file1.yml",
-			file2:    "file1.yml",
-			expected: "flat_same_result.txt",
-		},
-		{
-			name:     "all keys added",
-			file1:    "empty.yml",
-			file2:    "file2.yaml",
-			expected: "flat_added_result.txt",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := GenDiff(fixturePath(tt.file1), fixturePath(tt.file2), "stylish")
-			require.NoError(t, err)
-			assert.Equal(t, readFixture(t, tt.expected), got)
-		})
-	}
+func TestGenDiffUnsupportedFormat(t *testing.T) {
+	_, err := GenDiff(fixturePath("nested1.json"), fixturePath("nested2.json"), "unknown")
+	require.ErrorContains(t, err, "unsupported output format")
 }
 
 func TestGenDiffMissingFile(t *testing.T) {
-	_, err := GenDiff(fixturePath("missing.json"), fixturePath("file2.json"), "stylish")
+	_, err := GenDiff(fixturePath("missing.json"), fixturePath("nested2.json"), "stylish")
 	require.ErrorContains(t, err, "missing.json")
 
-	_, err = GenDiff(fixturePath("file1.json"), fixturePath("missing.json"), "stylish")
+	_, err = GenDiff(fixturePath("nested1.json"), fixturePath("missing.json"), "stylish")
 	require.ErrorContains(t, err, "missing.json")
 }
