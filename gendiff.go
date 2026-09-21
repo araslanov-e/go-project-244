@@ -3,6 +3,7 @@ package code
 import (
 	"fmt"
 
+	"code/internal/diff"
 	"code/internal/parsers"
 )
 
@@ -19,6 +20,8 @@ func GenDiff(filepath1, filepath2, format string) (string, error) {
 		return "", fmt.Errorf("parse %q: %w", filepath2, err)
 	}
 
-	// Само сравнение появится на следующих шагах, пока выводим разобранные данные.
-	return fmt.Sprintf("format: %s\nfile1: %v\nfile2: %v", format, data1, data2), nil
+	// Пока поддерживается только формат stylish, выбор форматтера появится позже.
+	_ = format
+
+	return diff.Build(data1, data2), nil
 }

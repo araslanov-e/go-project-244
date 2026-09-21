@@ -19,7 +19,7 @@ func TestRun(t *testing.T) {
 		filepath.Join("..", "..", "testdata", "file2.json"),
 	}, &out)
 	require.NoError(t, err)
-	assert.Contains(t, out.String(), "format: stylish")
+	assert.Contains(t, out.String(), "  + verbose: true\n}\n")
 }
 
 func TestRunWrongArgsCount(t *testing.T) {
