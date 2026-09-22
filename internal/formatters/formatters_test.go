@@ -55,6 +55,10 @@ func TestFormat(t *testing.T) {
 		assert.Equal(t, expected, got, "format %q", format)
 	}
 
-	_, err := Format(tree, "unknown")
+	got, err := Format(tree, Plain)
+	require.NoError(t, err)
+	assert.Equal(t, "Property 'a' was added with value: 1", got)
+
+	_, err = Format(tree, "unknown")
 	require.ErrorContains(t, err, "unsupported output format")
 }

@@ -20,4 +20,27 @@ make build
 Формат вывода задаётся флагом `--format` (`-f`). По умолчанию используется `stylish`:
 `+` — добавленное значение, `-` — удалённое, без знака — значение не изменилось.
 
+### Формат plain
+
+Формат `plain` выводит по строке на каждое изменённое свойство с полным путём от корня:
+
+```bash
+./bin/gendiff --format plain testdata/fixture/nested1.json testdata/fixture/nested2.json
+```
+
+```
+Property 'common.follow' was added with value: false
+Property 'common.setting2' was removed
+Property 'common.setting3' was updated. From true to null
+Property 'group1.nest' was updated. From [complex value] to 'str'
+...
+```
+
+Составные значения (объекты и массивы) выводятся как `[complex value]`, строки — в одинарных кавычках,
+числа, `true`, `false` и `null` — как есть.
+
+## Демо
+
+Все форматы вывода (`stylish` и `plain`):
+
 ![gendiff demo](docs/gendiff.gif)
