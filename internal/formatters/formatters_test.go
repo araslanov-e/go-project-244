@@ -59,6 +59,10 @@ func TestFormat(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, "Property 'a' was added with value: 1", got)
 
+	got, err = Format(tree, JSON)
+	require.NoError(t, err)
+	assert.JSONEq(t, `[{"key": "a", "status": "added", "value": 1}]`, got)
+
 	_, err = Format(tree, "unknown")
 	require.ErrorContains(t, err, "unsupported output format")
 }

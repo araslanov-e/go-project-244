@@ -10,6 +10,7 @@ import (
 const (
 	Stylish = "stylish"
 	Plain   = "plain"
+	JSON    = "json"
 )
 
 // Format выводит дифф в указанном формате. Пустой format означает формат
@@ -20,6 +21,8 @@ func Format(tree []diff.Node, format string) (string, error) {
 		return FormatStylish(tree), nil
 	case Plain:
 		return FormatPlain(tree), nil
+	case JSON:
+		return FormatJSON(tree)
 	default:
 		return "", fmt.Errorf("unsupported output format: %q", format)
 	}

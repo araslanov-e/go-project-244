@@ -67,6 +67,27 @@ func TestGenDiffPlain(t *testing.T) {
 	}
 }
 
+func TestGenDiffJSON(t *testing.T) {
+	tests := []struct {
+		name  string
+		file1 string
+		file2 string
+	}{
+		{name: "json", file1: "nested1.json", file2: "nested2.json"},
+		{name: "yaml", file1: "nested1.yml", file2: "nested2.yaml"},
+	}
+
+	expected := readFixture(t, "json_result.json")
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := GenDiff(fixturePath(tt.file1), fixturePath(tt.file2), "json")
+			require.NoError(t, err)
+			assert.JSONEq(t, expected, got)
+		})
+	}
+}
+
 func TestGenDiffUnsupportedFormat(t *testing.T) {
 	_, err := GenDiff(fixturePath("nested1.json"), fixturePath("nested2.json"), "unknown")
 	require.ErrorContains(t, err, "unsupported output format")

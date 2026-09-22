@@ -39,8 +39,40 @@ Property 'group1.nest' was updated. From [complex value] to 'str'
 Составные значения (объекты и массивы) выводятся как `[complex value]`, строки — в одинарных кавычках,
 числа, `true`, `false` и `null` — как есть.
 
+### Формат json
+
+Формат `json` выводит дерево диффа в структурированном виде — его удобно обрабатывать другими программами:
+
+```bash
+./bin/gendiff --format json testdata/fixture/nested1.json testdata/fixture/nested2.json
+```
+
+Результат — массив узлов. У каждого узла есть `key` и `status`, остальные поля зависят от статуса:
+
+| `status`    | Поля                                        |
+|-------------|---------------------------------------------|
+| `added`     | `value` — новое значение                    |
+| `removed`   | `value` — удалённое значение                |
+| `unchanged` | `value` — значение                          |
+| `changed`   | `oldValue`, `newValue`                      |
+| `nested`    | `children` — массив вложенных узлов         |
+
+```json
+[
+  {
+    "key": "group1",
+    "status": "nested",
+    "children": [
+      { "key": "baz", "status": "changed", "oldValue": "bas", "newValue": "bars" },
+      { "key": "foo", "status": "unchanged", "value": "bar" }
+    ]
+  },
+  { "key": "group2", "status": "removed", "value": { "abc": 12345 } }
+]
+```
+
 ## Демо
 
-Все форматы вывода (`stylish` и `plain`):
+Все форматы вывода (`stylish`, `plain` и `json`):
 
 ![gendiff demo](docs/gendiff.gif)
