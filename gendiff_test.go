@@ -1,6 +1,7 @@
 package code
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"testing"
@@ -84,6 +85,9 @@ func TestGenDiffJSON(t *testing.T) {
 			got, err := GenDiff(fixturePath(tt.file1), fixturePath(tt.file2), "json")
 			require.NoError(t, err)
 			assert.JSONEq(t, expected, got)
+
+			var parsed map[string]any
+			require.NoError(t, json.Unmarshal([]byte(got), &parsed))
 		})
 	}
 }

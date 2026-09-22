@@ -15,12 +15,15 @@ const jsonIndent = "  "
 // с omitempty: иначе значение null (nil) пропадало бы из вывода.
 type jsonNode map[string]any
 
-// FormatJSON выводит дерево диффа как JSON-массив узлов. У каждого узла
-// есть key и status, остальные поля зависят от статуса:
+// FormatJSON выводит дерево диффа как JSON-объект, в котором ключи —
+// имена свойств, а значения — описания изменений. У каждого описания
+// есть status, остальные поля зависят от статуса:
 //   - added — value (новое значение);
 //   - removed, unchanged — value (значение из первой структуры);
 //   - changed — oldValue и newValue;
-//   - nested — children (массив вложенных узлов).
+//   - nested — children (объект того же вида для вложенных свойств).
+//
+// Ключи объектов encoding/json выводит в отсортированном порядке.
 func FormatJSON(tree []diff.Node) (string, error) {
 	data, err := json.MarshalIndent(jsonNodes(tree), "", jsonIndent)
 	if err != nil {
@@ -30,12 +33,12 @@ func FormatJSON(tree []diff.Node) (string, error) {
 	return string(data), nil
 }
 
-func jsonNodes(nodes []diff.Node) []jsonNode {
-	// Пустой, но не nil слайс — чтобы в выводе был [], а не null.
-	result := make([]jsonNode, 0, len(nodes))
+func jsonNodes(nodes []diff.Node) map[string]jsonNode {
+	// Пустая, но не nil map — чтобы в выводе был {}, а не null.
+	result := make(map[string]jsonNode, len(nodes))
 
 	for _, node := range nodes {
-		item := jsonNode{"key": node.Key, "status": node.Status}
+		item := jsonNode{"status": node.Status}
 
 		switch node.Status {
 		case diff.Added:
@@ -49,7 +52,7 @@ func jsonNodes(nodes []diff.Node) []jsonNode {
 			item["children"] = jsonNodes(node.Children)
 		}
 
-		result = append(result, item)
+		result[node.Key] = item
 	}
 
 	return result

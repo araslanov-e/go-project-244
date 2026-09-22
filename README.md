@@ -47,28 +47,28 @@ Property 'group1.nest' was updated. From [complex value] to 'str'
 ./bin/gendiff --format json testdata/fixture/nested1.json testdata/fixture/nested2.json
 ```
 
-Результат — массив узлов. У каждого узла есть `key` и `status`, остальные поля зависят от статуса:
+Результат — объект, ключи которого — имена свойств, а значения — описания изменений.
+У каждого описания есть `status`, остальные поля зависят от статуса:
 
-| `status`    | Поля                                        |
-|-------------|---------------------------------------------|
-| `added`     | `value` — новое значение                    |
-| `removed`   | `value` — удалённое значение                |
-| `unchanged` | `value` — значение                          |
-| `changed`   | `oldValue`, `newValue`                      |
-| `nested`    | `children` — массив вложенных узлов         |
+| `status`    | Поля                                                  |
+|-------------|-------------------------------------------------------|
+| `added`     | `value` — новое значение                              |
+| `removed`   | `value` — удалённое значение                          |
+| `unchanged` | `value` — значение                                    |
+| `changed`   | `oldValue`, `newValue`                                |
+| `nested`    | `children` — объект того же вида для вложенных свойств |
 
 ```json
-[
-  {
-    "key": "group1",
+{
+  "group1": {
     "status": "nested",
-    "children": [
-      { "key": "baz", "status": "changed", "oldValue": "bas", "newValue": "bars" },
-      { "key": "foo", "status": "unchanged", "value": "bar" }
-    ]
+    "children": {
+      "baz": { "status": "changed", "oldValue": "bas", "newValue": "bars" },
+      "foo": { "status": "unchanged", "value": "bar" }
+    }
   },
-  { "key": "group2", "status": "removed", "value": { "abc": 12345 } }
-]
+  "group2": { "status": "removed", "value": { "abc": 12345 } }
+}
 ```
 
 ## Демо

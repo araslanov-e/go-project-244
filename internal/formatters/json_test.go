@@ -22,65 +22,61 @@ func TestFormatJSON(t *testing.T) {
 		{Key: "list", Status: diff.Changed, OldValue: []any{float64(1)}, NewValue: float64(1.5)},
 	}
 
-	expected := `[
-  {
-    "children": [
-      {
-        "key": "follow",
+	expected := `{
+  "common": {
+    "children": {
+      "follow": {
         "status": "added",
         "value": false
       },
-      {
-        "key": "setting1",
+      "setting1": {
         "status": "unchanged",
         "value": "Value 1"
       },
-      {
-        "key": "setting2",
+      "setting2": {
         "status": "removed",
         "value": 200
       },
-      {
-        "key": "setting3",
+      "setting3": {
         "newValue": null,
         "oldValue": true,
         "status": "changed"
       },
-      {
-        "key": "setting5",
+      "setting5": {
         "status": "added",
         "value": {
           "key5": "value5"
         }
       }
-    ],
-    "key": "common",
+    },
     "status": "nested"
   },
-  {
-    "key": "list",
+  "list": {
     "newValue": 1.5,
     "oldValue": [
       1
     ],
     "status": "changed"
   }
-]`
+}`
 
 	got, err := FormatJSON(tree)
 	require.NoError(t, err)
 	assert.Equal(t, expected, got)
-	assert.True(t, json.Valid([]byte(got)))
+
+	// Вывод должен разбираться в map — так его читают внешние программы.
+	var parsed map[string]any
+	require.NoError(t, json.Unmarshal([]byte(got), &parsed))
 }
 
 func TestFormatJSONEmpty(t *testing.T) {
 	got, err := FormatJSON(nil)
 	require.NoError(t, err)
-	assert.Equal(t, "[]", got)
+	assert.Equal(t, "{}", got)
 
 	got, err = FormatJSON([]diff.Node{{Key: "a", Status: diff.Nested}})
 	require.NoError(t, err)
-	assert.JSONEq(t, `[{"key": "a", "status": "nested", "children": []}]`, got)
+	assert.JSONEq(t, `{"a": {"status": "nested", "children": {}}}`, got)
 }
 
 func TestFormatJSONUnsupportedValue(t *testing.T) {

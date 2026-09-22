@@ -1,98 +1,81 @@
-[
-  {
-    "children": [
-      {
-        "key": "follow",
+{
+  "common": {
+    "children": {
+      "follow": {
         "status": "added",
         "value": false
       },
-      {
-        "key": "setting1",
+      "setting1": {
         "status": "unchanged",
         "value": "Value 1"
       },
-      {
-        "key": "setting2",
+      "setting2": {
         "status": "removed",
         "value": 200
       },
-      {
-        "key": "setting3",
+      "setting3": {
         "newValue": null,
         "oldValue": true,
         "status": "changed"
       },
-      {
-        "key": "setting4",
+      "setting4": {
         "status": "added",
         "value": "blah blah"
       },
-      {
-        "key": "setting5",
+      "setting5": {
         "status": "added",
         "value": {
           "key5": "value5"
         }
       },
-      {
-        "children": [
-          {
-            "children": [
-              {
-                "key": "wow",
+      "setting6": {
+        "children": {
+          "doge": {
+            "children": {
+              "wow": {
                 "newValue": "so much",
                 "oldValue": "",
                 "status": "changed"
               }
-            ],
-            "key": "doge",
+            },
             "status": "nested"
           },
-          {
-            "key": "key",
+          "key": {
             "status": "unchanged",
             "value": "value"
           },
-          {
-            "key": "ops",
+          "ops": {
             "status": "added",
             "value": "vops"
           }
-        ],
-        "key": "setting6",
+        },
         "status": "nested"
       }
-    ],
-    "key": "common",
+    },
     "status": "nested"
   },
-  {
-    "children": [
-      {
-        "key": "baz",
+  "group1": {
+    "children": {
+      "baz": {
         "newValue": "bars",
         "oldValue": "bas",
         "status": "changed"
       },
-      {
-        "key": "foo",
+      "foo": {
         "status": "unchanged",
         "value": "bar"
       },
-      {
-        "key": "nest",
+      "nest": {
         "newValue": "str",
         "oldValue": {
           "key": "value"
         },
         "status": "changed"
       }
-    ],
-    "key": "group1",
+    },
     "status": "nested"
   },
-  {
-    "key": "group2",
+  "group2": {
     "status": "removed",
     "value": {
       "abc": 12345,
@@ -101,8 +84,7 @@
       }
     }
   },
-  {
-    "key": "group3",
+  "group3": {
     "status": "added",
     "value": {
       "deep": {
@@ -113,4 +95,4 @@
       "fee": 100500
     }
   }
-]
+}
