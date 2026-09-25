@@ -66,3 +66,23 @@ func TestFormat(t *testing.T) {
 	_, err = Format(tree, "unknown")
 	require.ErrorContains(t, err, "unsupported output format")
 }
+
+// Supported должен согласоваться с Format: то, что Supported признаёт,
+// Format обязан вывести, и наоборот.
+func TestSupported(t *testing.T) {
+	tree := []diff.Node{{Key: "a", Status: diff.Added, NewValue: float64(1)}}
+
+	for _, format := range append(Names(), "") {
+		assert.True(t, Supported(format), "format %q", format)
+
+		_, err := Format(tree, format)
+		assert.NoError(t, err, "format %q", format)
+	}
+
+	for _, format := range []string{"unknown", "STYLISH", "yaml"} {
+		assert.False(t, Supported(format), "format %q", format)
+
+		_, err := Format(tree, format)
+		assert.Error(t, err, "format %q", format)
+	}
+}

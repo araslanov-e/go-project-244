@@ -2,6 +2,7 @@ package formatters
 
 import (
 	"fmt"
+	"slices"
 
 	"code/internal/diff"
 )
@@ -12,6 +13,19 @@ const (
 	Plain   = "plain"
 	JSON    = "json"
 )
+
+// Names возвращает имена поддерживаемых форматов вывода — для подсказок
+// пользователю (usage флага, текст ошибки).
+func Names() []string {
+	return []string{Stylish, Plain, JSON}
+}
+
+// Supported сообщает, поддерживается ли формат вывода. Пустое имя
+// означает формат по умолчанию, поэтому тоже поддерживается.
+// Позволяет проверить формат до чтения файлов.
+func Supported(format string) bool {
+	return format == "" || slices.Contains(Names(), format)
+}
 
 // Format выводит дифф в указанном формате. Пустой format означает формат
 // по умолчанию — stylish.
