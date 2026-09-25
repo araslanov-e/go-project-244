@@ -22,8 +22,8 @@ const (
 )
 
 // UsageError — команда вызвана неправильно: не то число аргументов,
-// неизвестный флаг или неизвестный формат вывода. Run печатает такие
-// ошибки вместе с подсказкой по вызову, а ExitCode отдаёт для них
+// неизвестный флаг или неизвестный формат вывода. Такие ошибки команда
+// печатает вместе с подсказкой по вызову, а ExitCode отдаёт для них
 // отдельный код завершения.
 //
 // Метод ExitCode у типа намеренно не объявлен: тогда cli считал бы его
@@ -41,7 +41,7 @@ func usageErrorf(format string, args ...any) error {
 	return &UsageError{err: fmt.Errorf(format, args...)}
 }
 
-// ExitCode возвращает код завершения для ошибки, полученной от Run.
+// ExitCode возвращает код завершения для ошибки, полученной от команды.
 func ExitCode(err error) int {
 	var usageErr *UsageError
 
@@ -55,36 +55,13 @@ func ExitCode(err error) int {
 	}
 }
 
-// Run собирает CLI-команду gendiff и запускает её с аргументами args:
-// результат пишется в output, сообщения об ошибках — в errOutput.
-// Ошибка возвращается только для того, чтобы вызывающий получил по ней
-// код завершения через ExitCode; печатать её повторно не нужно.
-func Run(ctx context.Context, args []string, output, errOutput io.Writer) error {
-	cmd := newCommand(output, errOutput)
-
-	err := cmd.Run(ctx, args)
-	if err == nil {
-		return nil
-	}
-
-	// Писать в поток ошибок больше некуда, поэтому результат записи
-	// здесь и ниже не проверяем.
-	_, _ = fmt.Fprintf(errOutput, "%s: %v\n", cmd.Name, err)
-
-	var usageErr *UsageError
-	if errors.As(err, &usageErr) {
-		// Вызов неправильный — показываем, как вызывать правильно.
-		// Помощь cli печатает в cmd.Writer, поэтому на этом пути
-		// направляем его в поток ошибок.
-		_, _ = fmt.Fprintln(errOutput)
-		cmd.Writer = errOutput
-		_ = cli.ShowAppHelp(cmd)
-	}
-
-	return err
-}
-
-func newCommand(output, errOutput io.Writer) *cli.Command {
+// New собирает CLI-команду gendiff: результат пишется в output,
+// сообщения об ошибках и подсказка по вызову — в errOutput. Оба потока
+// подменяются в тестах, поэтому команда проверяема целиком.
+//
+// Запуск остаётся за вызывающим кодом: он решает, когда вызвать
+// cmd.Run(ctx, args), и получает код завершения через ExitCode.
+func New(output, errOutput io.Writer) *cli.Command {
 	return &cli.Command{
 		Name:      "gendiff",
 		Usage:     "Compares two configuration files and shows a difference.",
@@ -106,10 +83,35 @@ func newCommand(output, errOutput io.Writer) *cli.Command {
 		OnUsageError: func(_ context.Context, _ *cli.Command, err error, _ bool) error {
 			return &UsageError{err: err}
 		},
+		// Все ошибки — и разбора флагов, и действия — cli приводит сюда,
+		// поэтому сообщения печатаются в одном месте. Возвращённую
+		// ошибку cmd.Run отдаёт вызывающему коду для ExitCode.
+		ExitErrHandler: func(_ context.Context, cmd *cli.Command, err error) {
+			report(errOutput, cmd, err)
+		},
 		Action: func(_ context.Context, cmd *cli.Command) error {
 			return run(output, cmd)
 		},
 	}
+}
+
+// report печатает ошибку в errOutput, а для неправильного вызова — ещё
+// и подсказку, как вызывать команду правильно.
+func report(errOutput io.Writer, cmd *cli.Command, err error) {
+	// Писать в поток ошибок больше некуда, поэтому результат записи
+	// здесь и ниже не проверяем.
+	_, _ = fmt.Fprintf(errOutput, "%s: %v\n", cmd.Name, err)
+
+	var usageErr *UsageError
+	if !errors.As(err, &usageErr) {
+		return
+	}
+
+	_, _ = fmt.Fprintln(errOutput)
+	// Помощь cli печатает в cmd.Writer, поэтому на этом пути
+	// направляем его в поток ошибок: в обычный вывод идёт только дифф.
+	cmd.Writer = errOutput
+	_ = cli.ShowAppHelp(cmd)
 }
 
 func run(output io.Writer, cmd *cli.Command) error {

@@ -8,8 +8,12 @@ import (
 )
 
 func main() {
-	// Сообщение об ошибке печатает app.Run, main только отдаёт код
-	// завершения: 2 — неправильный вызов команды, 1 — сбой выполнения.
-	err := app.Run(context.Background(), os.Args, os.Stdout, os.Stderr)
+	cmd := app.New(os.Stdout, os.Stderr)
+
+	// Сообщение об ошибке печатает сама команда, точка входа только
+	// решает, когда её запустить, и отдаёт код завершения:
+	// 2 — неправильный вызов команды, 1 — сбой выполнения.
+	err := cmd.Run(context.Background(), os.Args)
+
 	os.Exit(app.ExitCode(err))
 }

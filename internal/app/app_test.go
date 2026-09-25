@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -16,15 +17,36 @@ func fixturePath(name string) string {
 	return filepath.Join("..", "..", "testdata", "fixture", name)
 }
 
-// runCommand запускает команду, возвращая её вывод, поток ошибок и ошибку.
+// runCommand создаёт команду и запускает её — так же, как это делает
+// точка входа, — и возвращает её вывод, поток ошибок и ошибку.
 func runCommand(t *testing.T, args ...string) (string, string, error) {
 	t.Helper()
 
 	var out, errOut bytes.Buffer
 
-	err := Run(context.Background(), append([]string{"gendiff"}, args...), &out, &errOut)
+	cmd := New(&out, &errOut)
+	err := cmd.Run(context.Background(), append([]string{"gendiff"}, args...))
 
 	return out.String(), errOut.String(), err
+}
+
+// New только собирает команду: пока её не запустили, ничего не происходит,
+// а запускает её вызывающий код — тогда, когда решит сам.
+func TestNew(t *testing.T) {
+	var out, errOut bytes.Buffer
+
+	cmd := New(&out, &errOut)
+
+	require.NotNil(t, cmd)
+	assert.Equal(t, "gendiff", cmd.Name)
+	assert.Empty(t, out.String(), "создание команды ничего не выводит")
+	assert.Empty(t, errOut.String())
+
+	err := cmd.Run(context.Background(), []string{
+		"gendiff", fixturePath("nested1.json"), fixturePath("nested2.json"),
+	})
+	require.NoError(t, err)
+	assert.NotEmpty(t, out.String())
 }
 
 func TestRun(t *testing.T) {
@@ -78,6 +100,7 @@ func TestRunUsageErrors(t *testing.T) {
 			assert.Contains(t, errOut, tt.contains)
 			assert.Contains(t, errOut, "USAGE", "при ошибке вызова показываем usage")
 			assert.Contains(t, errOut, "<filepath1> <filepath2>")
+			assert.Equal(t, 1, strings.Count(errOut, "gendiff: "), "сообщение печатается один раз")
 		})
 	}
 }
@@ -119,6 +142,7 @@ func TestRunFailureErrors(t *testing.T) {
 			assert.Empty(t, out)
 			assert.Contains(t, errOut, tt.contains)
 			assert.NotContains(t, errOut, "USAGE", "usage тут не при чём: вызов правильный")
+			assert.Equal(t, 1, strings.Count(errOut, "gendiff: "), "сообщение печатается один раз")
 		})
 	}
 }
