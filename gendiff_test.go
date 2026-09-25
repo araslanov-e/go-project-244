@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -88,6 +89,53 @@ func TestGenDiffJSON(t *testing.T) {
 
 			var parsed map[string]any
 			require.NoError(t, json.Unmarshal([]byte(got), &parsed))
+		})
+	}
+}
+
+// Одинаковые данные в JSON и YAML не должны давать различий: до
+// приведения к единому представлению число 50 из JSON (float64) и из
+// YAML (int) считались разными значениями.
+func TestGenDiffSameDataDifferentFormats(t *testing.T) {
+	files := []string{"numbers1.json", "numbers1.yml"}
+
+	for _, file1 := range files {
+		for _, file2 := range files {
+			t.Run(file1+" vs "+file2, func(t *testing.T) {
+				plain, err := GenDiff(fixturePath(file1), fixturePath(file2), "plain")
+				require.NoError(t, err)
+				assert.Empty(t, plain, "изменений быть не должно")
+
+				stylish, err := GenDiff(fixturePath(file1), fixturePath(file2), "stylish")
+				require.NoError(t, err)
+
+				for _, line := range strings.Split(stylish, "\n") {
+					trimmed := strings.TrimSpace(line)
+					assert.False(t, strings.HasPrefix(trimmed, "+ ") || strings.HasPrefix(trimmed, "- "),
+						"строка %q помечена как изменение", line)
+				}
+			})
+		}
+	}
+}
+
+// Дифф не должен зависеть от того, в каких форматах записаны файлы.
+func TestGenDiffIndependentOfFormatPair(t *testing.T) {
+	expected, err := GenDiff(fixturePath("numbers1.json"), fixturePath("numbers2.json"), "stylish")
+	require.NoError(t, err)
+	require.Contains(t, expected, "- retries: 3")
+
+	pairs := [][2]string{
+		{"numbers1.json", "numbers2.yml"},
+		{"numbers1.yml", "numbers2.json"},
+		{"numbers1.yml", "numbers2.yml"},
+	}
+
+	for _, pair := range pairs {
+		t.Run(pair[0]+" vs "+pair[1], func(t *testing.T) {
+			got, err := GenDiff(fixturePath(pair[0]), fixturePath(pair[1]), "stylish")
+			require.NoError(t, err)
+			assert.Equal(t, expected, got)
 		})
 	}
 }

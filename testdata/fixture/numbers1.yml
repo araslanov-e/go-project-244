@@ -1,0 +1,9 @@
+timeout: 50
+retries: 3
+ratio: 1.5
+limits:
+  port: 8080
+  size: 1024
+ports:
+  - 80
+  - 443
