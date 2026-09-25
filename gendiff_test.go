@@ -145,6 +145,25 @@ func TestGenDiffUnsupportedFormat(t *testing.T) {
 	require.ErrorContains(t, err, "unsupported output format")
 }
 
+// Пустой файл отклоняется в любом формате и в любом из аргументов,
+// а в сообщении видно, какой именно файл пуст.
+func TestGenDiffEmptyFile(t *testing.T) {
+	for _, name := range []string{"cleared.json", "cleared.yml"} {
+		t.Run(name, func(t *testing.T) {
+			empty := filepath.Join(t.TempDir(), name)
+			require.NoError(t, os.WriteFile(empty, nil, 0o600))
+
+			_, err := GenDiff(empty, fixturePath("file2.json"), "stylish")
+			require.ErrorContains(t, err, name)
+			require.ErrorContains(t, err, "file contains no data")
+
+			_, err = GenDiff(fixturePath("file1.json"), empty, "stylish")
+			require.ErrorContains(t, err, name)
+			require.ErrorContains(t, err, "file contains no data")
+		})
+	}
+}
+
 func TestGenDiffMissingFile(t *testing.T) {
 	_, err := GenDiff(fixturePath("missing.json"), fixturePath("nested2.json"), "stylish")
 	require.ErrorContains(t, err, "missing.json")

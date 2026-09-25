@@ -110,6 +110,87 @@ func TestParseSameDataDifferentFormats(t *testing.T) {
 	}
 }
 
+// Правило для пустого ввода одно для всех форматов: это ошибка.
+// Иначе случайно очищенный файл выглядел бы как конфигурация без ключей.
+func TestParseEmptyInput(t *testing.T) {
+	tests := []struct {
+		name   string
+		format string
+		data   string
+	}{
+		{name: "empty json", format: "json", data: ""},
+		{name: "blank json", format: "json", data: "   \n\t"},
+		{name: "null json", format: "json", data: "null"},
+		{name: "empty yaml", format: "yaml", data: ""},
+		{name: "blank yaml", format: "yaml", data: "   \n"},
+		{name: "comments only yaml", format: "yaml", data: "# только комментарий\n"},
+		{name: "null yaml", format: "yaml", data: "null"},
+		{name: "tilde yaml", format: "yaml", data: "~"},
+		{name: "empty document yaml", format: "yaml", data: "---\n"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := Parse([]byte(tt.data), tt.format)
+			require.ErrorIs(t, err, ErrEmptyInput)
+		})
+	}
+}
+
+// Пустую конфигурацию нужно записывать явно как {} — и это работает
+// в обоих форматах (фикстуры empty.json и empty.yml как раз такие).
+func TestParseEmptyObject(t *testing.T) {
+	for _, format := range []string{"json", "yaml"} {
+		t.Run(format, func(t *testing.T) {
+			got, err := Parse([]byte("{}"), format)
+			require.NoError(t, err)
+			assert.Equal(t, map[string]any{}, got)
+		})
+	}
+}
+
+// На верхнем уровне должен быть объект, иначе сравнивать нечего.
+func TestParseNotAnObject(t *testing.T) {
+	tests := []struct {
+		name   string
+		format string
+		data   string
+	}{
+		{name: "json array", format: "json", data: "[1, 2]"},
+		{name: "json number", format: "json", data: "42"},
+		{name: "json string", format: "json", data: `"text"`},
+		{name: "json bool", format: "json", data: "true"},
+		{name: "yaml array", format: "yaml", data: "- 1\n- 2\n"},
+		{name: "yaml number", format: "yaml", data: "42"},
+		{name: "yaml string", format: "yaml", data: "text"},
+		{name: "yaml bool", format: "yaml", data: "true"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := Parse([]byte(tt.data), tt.format)
+			require.ErrorIs(t, err, ErrNotAnObject)
+		})
+	}
+}
+
+func TestParseJSONTrailingData(t *testing.T) {
+	_, err := Parse([]byte(`{"key": "value"} trailing`), "json")
+	require.ErrorContains(t, err, "unexpected data after the top-level value")
+}
+
+func TestParseFileEmpty(t *testing.T) {
+	for _, name := range []string{"config.json", "config.yml"} {
+		t.Run(name, func(t *testing.T) {
+			path := filepath.Join(t.TempDir(), name)
+			require.NoError(t, os.WriteFile(path, nil, 0o600))
+
+			_, err := ParseFile(path)
+			require.ErrorIs(t, err, ErrEmptyInput)
+		})
+	}
+}
+
 func TestParseFormatCaseInsensitive(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "config.YML")
 	require.NoError(t, os.WriteFile(path, []byte("key: value\n"), 0o600))
@@ -132,6 +213,8 @@ func TestParseFileErrors(t *testing.T) {
 	require.NoError(t, os.WriteFile(invalid, []byte("{not json"), 0o600))
 	_, err = ParseFile(invalid)
 	require.ErrorContains(t, err, "parse json")
+	// Обрыв в середине документа — это ошибка разбора, а не пустой файл.
+	require.NotErrorIs(t, err, ErrEmptyInput)
 
 	invalidYAML := filepath.Join(t.TempDir(), "broken.yml")
 	require.NoError(t, os.WriteFile(invalidYAML, []byte("key: [unclosed"), 0o600))
