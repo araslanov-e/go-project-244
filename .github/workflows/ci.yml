@@ -18,8 +18,9 @@ jobs:
         with:
           go-version-file: go.mod
 
+      # Версия линтера задана в Makefile — та же, что и при локальном запуске.
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v9
+        run: make lint
 
   test:
     runs-on: ubuntu-latest

@@ -3,14 +3,25 @@ COVERAGE_FILE := coverage.out
 # Пакет main (cmd/gendiff) из-под порога исключаем: в нём только вызов app.Run.
 COVERAGE_PKGS := $(shell go list ./... | grep -v /cmd/)
 
+# Версия линтера закреплена здесь и только здесь: и локальный запуск, и CI
+# идут через `make lint`, поэтому один коммит получает один и тот же результат.
+# Обновление линтера — отдельное изменение этой строки.
+GOLANGCI_LINT_VERSION := v2.12.1
+# Версия в имени файла: после её смены make поставит новый бинарник сам.
+GOLANGCI_LINT := bin/golangci-lint-$(GOLANGCI_LINT_VERSION)
+
 build:
 	go build -o bin/gendiff ./cmd/gendiff
 
-lint:
-	golangci-lint run ./...
+$(GOLANGCI_LINT):
+	GOBIN=$(CURDIR)/bin go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@$(GOLANGCI_LINT_VERSION)
+	mv bin/golangci-lint $(GOLANGCI_LINT)
 
-lint-fix:
-	golangci-lint run --fix ./...
+lint: $(GOLANGCI_LINT)
+	$(GOLANGCI_LINT) run ./...
+
+lint-fix: $(GOLANGCI_LINT)
+	$(GOLANGCI_LINT) run --fix ./...
 
 test:
 	go test -v ./...
