@@ -24,6 +24,7 @@ func TestFormatJSON(t *testing.T) {
 
 	expected := `{
   "common": {
+    "status": "nested",
     "children": {
       "follow": {
         "status": "added",
@@ -38,9 +39,9 @@ func TestFormatJSON(t *testing.T) {
         "value": 200
       },
       "setting3": {
-        "newValue": null,
+        "status": "changed",
         "oldValue": true,
-        "status": "changed"
+        "newValue": null
       },
       "setting5": {
         "status": "added",
@@ -48,15 +49,14 @@ func TestFormatJSON(t *testing.T) {
           "key5": "value5"
         }
       }
-    },
-    "status": "nested"
+    }
   },
   "list": {
-    "newValue": 1.5,
+    "status": "changed",
     "oldValue": [
       1
     ],
-    "status": "changed"
+    "newValue": 1.5
   }
 }`
 

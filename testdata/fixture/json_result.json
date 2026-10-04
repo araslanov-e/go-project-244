@@ -1,5 +1,6 @@
 {
   "common": {
+    "status": "nested",
     "children": {
       "follow": {
         "status": "added",
@@ -14,9 +15,9 @@
         "value": 200
       },
       "setting3": {
-        "newValue": null,
+        "status": "changed",
         "oldValue": true,
-        "status": "changed"
+        "newValue": null
       },
       "setting4": {
         "status": "added",
@@ -29,16 +30,17 @@
         }
       },
       "setting6": {
+        "status": "nested",
         "children": {
           "doge": {
+            "status": "nested",
             "children": {
               "wow": {
-                "newValue": "so much",
+                "status": "changed",
                 "oldValue": "",
-                "status": "changed"
+                "newValue": "so much"
               }
-            },
-            "status": "nested"
+            }
           },
           "key": {
             "status": "unchanged",
@@ -48,32 +50,30 @@
             "status": "added",
             "value": "vops"
           }
-        },
-        "status": "nested"
+        }
       }
-    },
-    "status": "nested"
+    }
   },
   "group1": {
+    "status": "nested",
     "children": {
       "baz": {
-        "newValue": "bars",
+        "status": "changed",
         "oldValue": "bas",
-        "status": "changed"
+        "newValue": "bars"
       },
       "foo": {
         "status": "unchanged",
         "value": "bar"
       },
       "nest": {
-        "newValue": "str",
+        "status": "changed",
         "oldValue": {
           "key": "value"
         },
-        "status": "changed"
+        "newValue": "str"
       }
-    },
-    "status": "nested"
+    }
   },
   "group2": {
     "status": "removed",

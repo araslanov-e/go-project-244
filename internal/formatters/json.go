@@ -10,10 +10,21 @@ import (
 // jsonIndent — отступ одного уровня вложенности в выводе JSON.
 const jsonIndent = "  "
 
-// jsonNode — представление узла диффа в формате JSON. Набор полей
-// зависит от статуса, поэтому узел собирается в map, а не в структуру
-// с omitempty: иначе значение null (nil) пропадало бы из вывода.
-type jsonNode map[string]any
+// jsonNode — представление узла диффа в формате JSON. Имена полей формата
+// заданы тегами; какие поля заполнены, зависит от статуса, остальные
+// в вывод не попадают.
+//
+// Значения хранятся по указателю, чтобы отличать «поля нет» от null:
+// nil-указатель omitempty пропускает, а указатель на nil выводится как null.
+// У Children стоит omitzero, а не omitempty: он пропускает только nil,
+// так что вложенный объект без свойств остаётся в выводе как {}.
+type jsonNode struct {
+	Status   diff.Status         `json:"status"`
+	Value    *any                `json:"value,omitempty"`
+	OldValue *any                `json:"oldValue,omitempty"`
+	NewValue *any                `json:"newValue,omitempty"`
+	Children map[string]jsonNode `json:"children,omitzero"`
+}
 
 // jsonFormatter выводит дифф как JSON-объект, без состояния.
 type jsonFormatter struct{}
@@ -31,7 +42,8 @@ func (jsonFormatter) Format(tree []diff.Node) (string, error) {
 //   - changed — oldValue и newValue;
 //   - nested — children (объект того же вида для вложенных свойств).
 //
-// Ключи объектов encoding/json выводит в отсортированном порядке.
+// Свойства encoding/json выводит в отсортированном порядке, поля
+// описания — в порядке их объявления в jsonNode.
 func formatJSON(tree []diff.Node) (string, error) {
 	data, err := json.MarshalIndent(jsonNodes(tree), "", jsonIndent)
 	if err != nil {
@@ -46,18 +58,18 @@ func jsonNodes(nodes []diff.Node) map[string]jsonNode {
 	result := make(map[string]jsonNode, len(nodes))
 
 	for _, node := range nodes {
-		item := jsonNode{"status": node.Status}
+		item := jsonNode{Status: node.Status}
 
 		switch node.Status {
 		case diff.Added:
-			item["value"] = node.NewValue
+			item.Value = &node.NewValue
 		case diff.Removed, diff.Unchanged:
-			item["value"] = node.OldValue
+			item.Value = &node.OldValue
 		case diff.Changed:
-			item["oldValue"] = node.OldValue
-			item["newValue"] = node.NewValue
+			item.OldValue = &node.OldValue
+			item.NewValue = &node.NewValue
 		case diff.Nested:
-			item["children"] = jsonNodes(node.Children)
+			item.Children = jsonNodes(node.Children)
 		}
 
 		result[node.Key] = item
