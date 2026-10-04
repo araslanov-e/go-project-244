@@ -20,10 +20,12 @@ func (plainFormatter) Format(tree []diff.Node) (string, error) {
 // удалённое или изменённое свойство с полным путём от корня.
 // Неизменённые свойства не выводятся.
 func formatPlain(tree []diff.Node) string {
-	return strings.Join(plainLines(tree, ""), "\n")
+	return strings.Join(buildPlainLines(tree, ""), "\n")
 }
 
-func plainLines(nodes []diff.Node, parent string) []string {
+// buildPlainLines строит строки вывода для узлов одного уровня; parent —
+// путь до этого уровня от корня (пустой для верхнего).
+func buildPlainLines(nodes []diff.Node, parent string) []string {
 	var lines []string
 
 	for _, node := range nodes {
@@ -35,14 +37,14 @@ func plainLines(nodes []diff.Node, parent string) []string {
 		switch node.Status {
 		case diff.Added:
 			lines = append(lines, fmt.Sprintf("Property '%s' was added with value: %s",
-				path, plainValue(node.NewValue)))
+				path, formatPlainValue(node.NewValue)))
 		case diff.Removed:
 			lines = append(lines, fmt.Sprintf("Property '%s' was removed", path))
 		case diff.Changed:
 			lines = append(lines, fmt.Sprintf("Property '%s' was updated. From %s to %s",
-				path, plainValue(node.OldValue), plainValue(node.NewValue)))
+				path, formatPlainValue(node.OldValue), formatPlainValue(node.NewValue)))
 		case diff.Nested:
-			lines = append(lines, plainLines(node.Children, path)...)
+			lines = append(lines, buildPlainLines(node.Children, path)...)
 		case diff.Unchanged:
 		}
 	}
@@ -50,10 +52,10 @@ func plainLines(nodes []diff.Node, parent string) []string {
 	return lines
 }
 
-// plainValue приводит значение к строке: составные значения (объекты
+// formatPlainValue приводит значение к строке: составные значения (объекты
 // и массивы) заменяются на [complex value], строки берутся в одинарные
 // кавычки, остальное выводится как есть.
-func plainValue(value any) string {
+func formatPlainValue(value any) string {
 	switch v := value.(type) {
 	case nil:
 		return "null"

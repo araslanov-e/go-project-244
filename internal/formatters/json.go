@@ -45,7 +45,7 @@ func (jsonFormatter) Format(tree []diff.Node) (string, error) {
 // Свойства encoding/json выводит в отсортированном порядке, поля
 // описания — в порядке их объявления в jsonNode.
 func formatJSON(tree []diff.Node) (string, error) {
-	data, err := json.MarshalIndent(jsonNodes(tree), "", jsonIndent)
+	data, err := json.MarshalIndent(buildJSONNodes(tree), "", jsonIndent)
 	if err != nil {
 		return "", fmt.Errorf("marshal json: %w", err)
 	}
@@ -53,7 +53,9 @@ func formatJSON(tree []diff.Node) (string, error) {
 	return string(data), nil
 }
 
-func jsonNodes(nodes []diff.Node) map[string]jsonNode {
+// buildJSONNodes преобразует узлы диффа в их представление для JSON:
+// объект, ключи которого — имена свойств.
+func buildJSONNodes(nodes []diff.Node) map[string]jsonNode {
 	// Пустая, но не nil map — чтобы в выводе был {}, а не null.
 	result := make(map[string]jsonNode, len(nodes))
 
@@ -69,7 +71,7 @@ func jsonNodes(nodes []diff.Node) map[string]jsonNode {
 			item.OldValue = &node.OldValue
 			item.NewValue = &node.NewValue
 		case diff.Nested:
-			item.Children = jsonNodes(node.Children)
+			item.Children = buildJSONNodes(node.Children)
 		}
 
 		result[node.Key] = item
