@@ -60,7 +60,7 @@ func TestFormatJSON(t *testing.T) {
   }
 }`
 
-	got, err := FormatJSON(tree)
+	got, err := formatJSON(tree)
 	require.NoError(t, err)
 	assert.Equal(t, expected, got)
 
@@ -70,11 +70,11 @@ func TestFormatJSON(t *testing.T) {
 }
 
 func TestFormatJSONEmpty(t *testing.T) {
-	got, err := FormatJSON(nil)
+	got, err := formatJSON(nil)
 	require.NoError(t, err)
 	assert.Equal(t, "{}", got)
 
-	got, err = FormatJSON([]diff.Node{{Key: "a", Status: diff.Nested}})
+	got, err = formatJSON([]diff.Node{{Key: "a", Status: diff.Nested}})
 	require.NoError(t, err)
 	assert.JSONEq(t, `{"a": {"status": "nested", "children": {}}}`, got)
 }
@@ -82,6 +82,6 @@ func TestFormatJSONEmpty(t *testing.T) {
 func TestFormatJSONUnsupportedValue(t *testing.T) {
 	tree := []diff.Node{{Key: "a", Status: diff.Added, NewValue: make(chan int)}}
 
-	_, err := FormatJSON(tree)
+	_, err := formatJSON(tree)
 	require.ErrorContains(t, err, "marshal json")
 }

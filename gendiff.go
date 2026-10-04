@@ -21,5 +21,10 @@ func GenDiff(filepath1, filepath2, format string) (string, error) {
 		return "", fmt.Errorf("parse %q: %w", filepath2, err)
 	}
 
-	return formatters.Format(diff.Build(data1, data2), format)
+	formatter, err := formatters.New(format)
+	if err != nil {
+		return "", err
+	}
+
+	return formatter.Format(diff.Build(data1, data2))
 }

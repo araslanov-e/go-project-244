@@ -29,11 +29,11 @@ Property 'common.setting3' was updated. From true to null
 Property 'common.setting5' was added with value: [complex value]
 Property 'common.setting6.wow' was updated. From '' to 'so much'
 Property 'list' was updated. From [complex value] to 1.5`
-	assert.Equal(t, expected, FormatPlain(tree))
+	assert.Equal(t, expected, formatPlain(tree))
 }
 
 func TestFormatPlainNoChanges(t *testing.T) {
 	tree := []diff.Node{{Key: "a", Status: diff.Unchanged, OldValue: "x", NewValue: "x"}}
-	assert.Empty(t, FormatPlain(tree))
-	assert.Empty(t, FormatPlain(nil))
+	assert.Empty(t, formatPlain(tree))
+	assert.Empty(t, formatPlain(nil))
 }

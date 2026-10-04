@@ -1,18 +1,21 @@
 package parsers
 
 import (
-	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"go.yaml.in/yaml/v3"
-
 	"code/internal/canonical"
+)
+
+// Имена поддерживаемых форматов входных данных. YAML и YML — одно и то же,
+// различаются только расширением файла.
+const (
+	JSON = "json"
+	YAML = "yaml"
+	YML  = "yml"
 )
 
 // Контракт входных данных, одинаковый для всех форматов: файл содержит
@@ -26,6 +29,49 @@ var (
 	// ErrNotAnObject — на верхнем уровне файла не объект.
 	ErrNotAnObject = errors.New("expected an object at the top level")
 )
+
+// Parser разбирает содержимое одного формата в произвольное значение.
+// Проверки общего контракта (документ есть, на верхнем уровне объект)
+// в реализации не входят: они одинаковы для всех форматов и живут в Parse.
+type Parser interface {
+	Parse(data []byte) (any, error)
+}
+
+// registry — единственное место, где перечислены форматы входных данных:
+// отсюда берут данные и NewParser, и Names, поэтому новый формат
+// добавляется одной записью. Слайс, а не map, чтобы порядок в сообщениях
+// пользователю был постоянным.
+var registry = []struct {
+	name string
+	new  func() Parser
+}{
+	{JSON, func() Parser { return jsonParser{} }},
+	{YAML, func() Parser { return yamlParser{} }},
+	{YML, func() Parser { return yamlParser{} }},
+}
+
+// NewParser возвращает парсер для формата: "json", "yaml" или "yml".
+func NewParser(format string) (Parser, error) {
+	for _, entry := range registry {
+		if entry.name == format {
+			return entry.new(), nil
+		}
+	}
+
+	return nil, fmt.Errorf("unsupported file format: %q (supported: %s)",
+		format, strings.Join(Names(), ", "))
+}
+
+// Names возвращает имена поддерживаемых форматов входных данных —
+// для сообщений пользователю.
+func Names() []string {
+	names := make([]string, 0, len(registry))
+	for _, entry := range registry {
+		names = append(names, entry.name)
+	}
+
+	return names
+}
 
 // ParseFile читает файл по пути (относительному или абсолютному) и
 // разбирает его содержимое в map. Формат определяется по расширению файла.
@@ -47,42 +93,19 @@ func ParseFile(path string) (map[string]any, error) {
 
 // Parse разбирает данные в указанном формате: "json", "yml" или "yaml".
 // Данные должны содержать объект: пустой ввод — это ErrEmptyInput,
-// документ другого вида — ErrNotAnObject (правило одно для всех форматов).
+// документ другого вида — ErrNotAnObject (правило одно для всех форматов,
+// поэтому проверки живут здесь, а не в реализациях Parser).
 // Результат приведён к каноническому виду, поэтому одинаковые данные
 // в разных форматах дают одинаковые map — их можно сравнивать напрямую.
 func Parse(data []byte, format string) (map[string]any, error) {
-	// Разбираем в any, а не сразу в map: так «документа нет» (пустой ввод
-	// или null) выглядит одинаково в обоих форматах — как raw == nil.
-	var raw any
+	parser, err := NewParser(format)
+	if err != nil {
+		return nil, err
+	}
 
-	switch format {
-	case "json":
-		decoder := json.NewDecoder(bytes.NewReader(data))
-		// UseNumber оставляет число текстом вместо float64: так его
-		// исходная запись доходит до canonical без потери точности.
-		decoder.UseNumber()
-
-		if err := decoder.Decode(&raw); err != nil {
-			// io.EOF — данных нет вовсе; обрыв в середине документа даёт
-			// io.ErrUnexpectedEOF и остаётся ошибкой разбора.
-			if errors.Is(err, io.EOF) {
-				return nil, ErrEmptyInput
-			}
-
-			return nil, fmt.Errorf("parse json: %w", err)
-		}
-
-		// Decode читает только первое значение, поэтому всё, что идёт
-		// после документа, проверяем отдельно.
-		if err := decoder.Decode(new(any)); !errors.Is(err, io.EOF) {
-			return nil, errors.New("parse json: unexpected data after the top-level value")
-		}
-	case "yml", "yaml":
-		if err := yaml.Unmarshal(data, &raw); err != nil {
-			return nil, fmt.Errorf("parse yaml: %w", err)
-		}
-	default:
-		return nil, fmt.Errorf("unsupported file format: %q", format)
+	raw, err := parser.Parse(data)
+	if err != nil {
+		return nil, err
 	}
 
 	if raw == nil {

@@ -191,6 +191,28 @@ func TestParseFileEmpty(t *testing.T) {
 	}
 }
 
+// NewParser должен согласоваться с Names: для каждого имени из списка
+// парсер создаётся, для чужого имени — ошибка со списком поддерживаемых.
+func TestNewParser(t *testing.T) {
+	for _, format := range Names() {
+		parser, err := NewParser(format)
+		require.NoError(t, err, "format %q", format)
+		assert.NotNil(t, parser, "format %q", format)
+	}
+
+	// yaml и yml — один и тот же парсер, различается только расширение файла.
+	byYAML, err := NewParser(YAML)
+	require.NoError(t, err)
+	byYML, err := NewParser(YML)
+	require.NoError(t, err)
+	assert.IsType(t, byYAML, byYML)
+
+	for _, format := range []string{"", "txt", "JSON"} {
+		_, err := NewParser(format)
+		require.ErrorContains(t, err, "unsupported file format", "format %q", format)
+	}
+}
+
 func TestParseFormatCaseInsensitive(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "config.YML")
 	require.NoError(t, os.WriteFile(path, []byte("key: value\n"), 0o600))

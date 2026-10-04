@@ -7,10 +7,19 @@ import (
 	"code/internal/diff"
 )
 
-// FormatPlain выводит дифф построчно: по строке на каждое добавленное,
+// plainFormatter выводит дифф построчно, без состояния.
+type plainFormatter struct{}
+
+// Format — реализация Formatter. Ошибок при выводе не бывает, но
+// сигнатура общая для всех форматтеров.
+func (plainFormatter) Format(tree []diff.Node) (string, error) {
+	return formatPlain(tree), nil
+}
+
+// formatPlain выводит дифф построчно: по строке на каждое добавленное,
 // удалённое или изменённое свойство с полным путём от корня.
 // Неизменённые свойства не выводятся.
-func FormatPlain(tree []diff.Node) string {
+func formatPlain(tree []diff.Node) string {
 	return strings.Join(plainLines(tree, ""), "\n")
 }
 

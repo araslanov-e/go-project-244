@@ -18,9 +18,20 @@ const (
 	signWidth  = 2
 )
 
-// FormatStylish выводит дифф в виде вложенных блоков в фигурных скобках:
+// stylishFormatter выводит дифф в виде вложенных блоков в фигурных
+// скобках. Состояния у него нет, поэтому фабрика создаёт его на каждый
+// вызов, не заботясь о переиспользовании.
+type stylishFormatter struct{}
+
+// Format — реализация Formatter. Ошибок при выводе не бывает, но
+// сигнатура общая для всех форматтеров.
+func (stylishFormatter) Format(tree []diff.Node) (string, error) {
+	return formatStylish(tree), nil
+}
+
+// formatStylish выводит дифф в виде вложенных блоков в фигурных скобках:
 // "+" — добавленное значение, "-" — удалённое, пробел — без изменений.
-func FormatStylish(tree []diff.Node) string {
+func formatStylish(tree []diff.Node) string {
 	var b strings.Builder
 
 	b.WriteString("{\n")

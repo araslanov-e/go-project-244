@@ -15,7 +15,15 @@ const jsonIndent = "  "
 // с omitempty: иначе значение null (nil) пропадало бы из вывода.
 type jsonNode map[string]any
 
-// FormatJSON выводит дерево диффа как JSON-объект, в котором ключи —
+// jsonFormatter выводит дифф как JSON-объект, без состояния.
+type jsonFormatter struct{}
+
+// Format — реализация Formatter.
+func (jsonFormatter) Format(tree []diff.Node) (string, error) {
+	return formatJSON(tree)
+}
+
+// formatJSON выводит дерево диффа как JSON-объект, в котором ключи —
 // имена свойств, а значения — описания изменений. У каждого описания
 // есть status, остальные поля зависят от статуса:
 //   - added — value (новое значение);
@@ -24,7 +32,7 @@ type jsonNode map[string]any
 //   - nested — children (объект того же вида для вложенных свойств).
 //
 // Ключи объектов encoding/json выводит в отсортированном порядке.
-func FormatJSON(tree []diff.Node) (string, error) {
+func formatJSON(tree []diff.Node) (string, error) {
 	data, err := json.MarshalIndent(jsonNodes(tree), "", jsonIndent)
 	if err != nil {
 		return "", fmt.Errorf("marshal json: %w", err)
