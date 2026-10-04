@@ -13,8 +13,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// Фикстуры пакета лежат рядом с ним, в его собственном testdata.
 func fixturePath(name string) string {
-	return filepath.Join("..", "..", "testdata", "fixture", name)
+	return filepath.Join("testdata", name)
 }
 
 // runCommand создаёт команду и запускает её — так же, как это делает
@@ -43,20 +44,20 @@ func TestNew(t *testing.T) {
 	assert.Empty(t, errOut.String())
 
 	err := cmd.Run(context.Background(), []string{
-		"gendiff", fixturePath("nested1.json"), fixturePath("nested2.json"),
+		"gendiff", fixturePath("config1.json"), fixturePath("config2.json"),
 	})
 	require.NoError(t, err)
 	assert.NotEmpty(t, out.String())
 }
 
 func TestRun(t *testing.T) {
-	out, errOut, err := runCommand(t, fixturePath("nested1.json"), fixturePath("nested2.json"))
+	out, errOut, err := runCommand(t, fixturePath("config1.json"), fixturePath("config2.json"))
 	require.NoError(t, err)
 	assert.Equal(t, ExitSuccess, ExitCode(err))
 
-	expected, readErr := os.ReadFile(fixturePath("nested_result.txt"))
+	expected, readErr := os.ReadFile(fixturePath("expected.txt"))
 	require.NoError(t, readErr)
-	assert.Equal(t, string(expected)+"\n", out)
+	assert.Equal(t, string(expected), out)
 	assert.Empty(t, errOut)
 }
 
@@ -80,12 +81,12 @@ func TestRunUsageErrors(t *testing.T) {
 		},
 		{
 			name:     "unsupported format",
-			args:     []string{"--format", "unknown", fixturePath("nested1.json"), fixturePath("nested2.json")},
+			args:     []string{"--format", "unknown", fixturePath("config1.json"), fixturePath("config2.json")},
 			contains: `unsupported output format: "unknown" (supported: stylish, plain, json)`,
 		},
 		{
 			name:     "unknown flag",
-			args:     []string{"--bogus", fixturePath("nested1.json"), fixturePath("nested2.json")},
+			args:     []string{"--bogus", fixturePath("config1.json"), fixturePath("config2.json")},
 			contains: "flag provided but not defined",
 		},
 	}
@@ -111,6 +112,9 @@ func TestRunFailureErrors(t *testing.T) {
 	empty := filepath.Join(t.TempDir(), "cleared.json")
 	require.NoError(t, os.WriteFile(empty, nil, 0o600))
 
+	unsupported := filepath.Join(t.TempDir(), "config.txt")
+	require.NoError(t, os.WriteFile(unsupported, []byte("key: value"), 0o600))
+
 	tests := []struct {
 		name     string
 		args     []string
@@ -118,17 +122,17 @@ func TestRunFailureErrors(t *testing.T) {
 	}{
 		{
 			name:     "missing file",
-			args:     []string{fixturePath("missing.json"), fixturePath("nested2.json")},
+			args:     []string{fixturePath("missing.json"), fixturePath("config2.json")},
 			contains: "missing.json",
 		},
 		{
 			name:     "empty file",
-			args:     []string{empty, fixturePath("nested2.json")},
+			args:     []string{empty, fixturePath("config2.json")},
 			contains: "file contains no data",
 		},
 		{
 			name:     "unsupported file format",
-			args:     []string{fixturePath("nested_result.txt"), fixturePath("nested2.json")},
+			args:     []string{unsupported, fixturePath("config2.json")},
 			contains: "unsupported file format",
 		},
 	}

@@ -10,8 +10,13 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// Фикстуры пакета лежат рядом с ним, в его собственном testdata.
+func fixturePath(name string) string {
+	return filepath.Join("testdata", name)
+}
+
 func TestParseFileJSON(t *testing.T) {
-	got, err := ParseFile(filepath.Join("..", "..", "testdata", "fixture", "file1.json"))
+	got, err := ParseFile(fixturePath("file1.json"))
 	require.NoError(t, err)
 
 	expected := map[string]any{
@@ -24,7 +29,7 @@ func TestParseFileJSON(t *testing.T) {
 }
 
 func TestParseFileAbsolutePath(t *testing.T) {
-	absPath, err := filepath.Abs(filepath.Join("..", "..", "testdata", "fixture", "file2.json"))
+	absPath, err := filepath.Abs(fixturePath("file2.json"))
 	require.NoError(t, err)
 
 	got, err := ParseFile(absPath)
@@ -72,7 +77,7 @@ func TestParseFileYAML(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := ParseFile(filepath.Join("..", "..", "testdata", "fixture", tt.file))
+			got, err := ParseFile(fixturePath(tt.file))
 			require.NoError(t, err)
 			assert.Equal(t, tt.expected, got)
 		})
@@ -223,7 +228,7 @@ func TestParseFormatCaseInsensitive(t *testing.T) {
 }
 
 func TestParseFileErrors(t *testing.T) {
-	_, err := ParseFile(filepath.Join("..", "..", "testdata", "fixture", "missing.json"))
+	_, err := ParseFile(fixturePath("missing.json"))
 	require.Error(t, err)
 
 	unsupported := filepath.Join(t.TempDir(), "config.txt")

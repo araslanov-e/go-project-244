@@ -153,11 +153,11 @@ func TestGenDiffEmptyFile(t *testing.T) {
 			empty := filepath.Join(t.TempDir(), name)
 			require.NoError(t, os.WriteFile(empty, nil, 0o600))
 
-			_, err := GenDiff(empty, fixturePath("file2.json"), "stylish")
+			_, err := GenDiff(empty, fixturePath("nested2.json"), "stylish")
 			require.ErrorContains(t, err, name)
 			require.ErrorContains(t, err, "file contains no data")
 
-			_, err = GenDiff(fixturePath("file1.json"), empty, "stylish")
+			_, err = GenDiff(fixturePath("nested1.json"), empty, "stylish")
 			require.ErrorContains(t, err, name)
 			require.ErrorContains(t, err, "file contains no data")
 		})
