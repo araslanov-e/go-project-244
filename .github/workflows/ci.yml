@@ -22,6 +22,9 @@ jobs:
       - name: golangci-lint
         run: make lint
 
+      - name: Check formatting
+        run: make fmt-check
+
   test:
     runs-on: ubuntu-latest
     steps:

@@ -6,7 +6,7 @@ COVERAGE_PKGS := $(shell go list ./... | grep -v /cmd/)
 # Версия линтера закреплена здесь и только здесь: и локальный запуск, и CI
 # идут через `make lint`, поэтому один коммит получает один и тот же результат.
 # Обновление линтера — отдельное изменение этой строки.
-GOLANGCI_LINT_VERSION := v2.12.1
+GOLANGCI_LINT_VERSION := v2.14.0
 # Версия в имени файла: после её смены make поставит новый бинарник сам.
 GOLANGCI_LINT := bin/golangci-lint-$(GOLANGCI_LINT_VERSION)
 
@@ -23,6 +23,14 @@ lint: $(GOLANGCI_LINT)
 lint-fix: $(GOLANGCI_LINT)
 	$(GOLANGCI_LINT) run --fix ./...
 
+# Форматирование (gofumpt, goimports, golines) настроено в .golangci.yml.
+fmt: $(GOLANGCI_LINT)
+	$(GOLANGCI_LINT) fmt
+
+# То же без записи: показывает дифф и падает, если есть что форматировать.
+fmt-check: $(GOLANGCI_LINT)
+	$(GOLANGCI_LINT) fmt --diff
+
 test:
 	go test -v ./...
 
@@ -35,4 +43,4 @@ test-coverage:
 		exit 1; \
 	fi
 
-.PHONY: build lint lint-fix test test-coverage
+.PHONY: build lint lint-fix fmt fmt-check test test-coverage

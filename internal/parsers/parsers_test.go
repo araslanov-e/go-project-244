@@ -98,8 +98,10 @@ func TestParseSameDataDifferentFormats(t *testing.T) {
 		{name: "big int", json: `{"id": 9007199254740993}`, yaml: "id: 9007199254740993"},
 		{name: "nested", json: `{"limits": {"port": 8080}}`, yaml: "limits:\n  port: 8080"},
 		{name: "array", json: `{"ports": [80, 443]}`, yaml: "ports:\n  - 80\n  - 443"},
-		{name: "mixed types", json: `{"a": 1, "b": "1", "c": true, "d": null}`,
-			yaml: "a: 1\nb: \"1\"\nc: true\nd: null"},
+		{
+			name: "mixed types", json: `{"a": 1, "b": "1", "c": true, "d": null}`,
+			yaml: "a: 1\nb: \"1\"\nc: true\nd: null",
+		},
 	}
 
 	for _, tt := range tests {
