@@ -26,5 +26,7 @@ func GenDiff(filepath1, filepath2, format string) (string, error) {
 		return "", err
 	}
 
-	return formatter.Format(diff.Build(data1, data2))
+	tree := diff.Build(data1, data2)
+
+	return formatter.Format(tree)
 }
